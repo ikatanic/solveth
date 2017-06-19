@@ -1,0 +1,33 @@
+<div ng-show="!loading && !success">
+    <div class="col-lg-6">
+        <h1>Submit new task</h1>
+        <form ng-submit="newTask(address_from, n, reward)">
+            <div class="form-group">
+                <label for="addressFrom">Your address</label>
+                <select ng-model="address_from" id="addressFrom">
+                    <option ng-repeat="account in accounts">{{account}}</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="numberToFactorize">Number to factorize</label>
+                <input type="number" class="form-control" id="numberToFactorize" placeholder="15" ng-model="n">
+            </div>
+            <div class="form-group">
+                <label for="rewardInEther">Reward in Ether</label>
+                <input type="number" class="form-control" id="amountInEther" placeholder="1" ng-model="reward">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+
+    </div>
+</div>
+
+<div ng-show="error">
+    <div class="alert alert-warning" role="alert">{{error}}</div>
+</div>
+<div ng-show="loading">
+    <div class="alert alert-notice" role="alert">Loading...</div>
+</div>
+<div ng-show="success">
+    <div class="alert alert-success" role="alert">Success!</div>
+</div>
