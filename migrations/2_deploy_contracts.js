@@ -1,5 +1,5 @@
-var Factorize = artifacts.require("./Factorize.sol");
+var Main = artifacts.require("./Main.sol");
 
 module.exports = function(deployer) {
-  deployer.deploy(Factorize);
+  deployer.deploy(Main);
 };
