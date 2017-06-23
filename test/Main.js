@@ -1,6 +1,6 @@
 var Factorize = artifacts.require("./Main.sol");
 
-contract('Factorize', function(accounts) {
+contract('Main', function(accounts) {
     var user_address = web3.eth.accounts[0];
 
     var checkBalance = function(address, etherBalance) {

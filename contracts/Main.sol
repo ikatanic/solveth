@@ -23,6 +23,13 @@ contract Main {
 
     Problem[] problems;
     Instance[] instances;
+    uint[] a;
+
+    function Main(address firstProblemContractAddress, string description) {
+        newProblem(firstProblemContractAddress, description);
+        a.push(15);
+        newInstance(firstProblemContractAddress, a);
+    }
 
     function newProblem(address contractAddress, string description) {
        problems.push(Problem({
@@ -31,24 +38,36 @@ contract Main {
        }));
     }
 
-    function newInstance(address contractAddress, uint[] input) payable returns (uint) {
-        if (msg.value > 0) {
-            uint instanceId = instances.length;
-            instances.push(Instance({
-                contractAddress: contractAddress,
-                input: input,
-                reward: msg.value,
-                state: InstanceState.Unsolved,
-                commitmentHash: 0x0,
-                commitedSolver: 0x0
-            }));
-            return instanceId;
-        } else {
-            throw;
-        }
+//    function newInstance(address contractAddress, uint[] input) payable returns (uint) {
+//        if (msg.value > 0) {
+//            uint instanceId = instances.length;
+//            instances.push(Instance({
+//                contractAddress: contractAddress,
+//                input: input,
+//                reward: msg.value,
+//                state: InstanceState.Unsolved,
+//                commitmentHash: 0x0,
+//                commitedSolver: 0x0
+//            }));
+//            return instanceId;
+//        } else {
+//            throw;
+//        }
+//    }
+    function newInstance(address contractAddress, uint[] input) returns (uint) {
+        uint instanceId = instances.length;
+        instances.push(Instance({
+          contractAddress: contractAddress,
+          input: input,
+          reward: 17,
+          state: InstanceState.Unsolved,
+          commitmentHash: 0x0,
+          commitedSolver: 0x0
+        }));
+        return instanceId;
     }
 
-    function instanceCommit(uint instanceId, bytes32 commitmentHash) returns (uint) {
+    function commitSolution(uint instanceId, bytes32 commitmentHash) returns (uint) {
         if (instanceId >= instances.length) {
             throw;
         }
@@ -63,7 +82,7 @@ contract Main {
         return 1;
     }
 
-    function instanceSolve(uint instanceId, uint[] output) returns (uint) {
+    function revealSolution(uint instanceId, uint[] output) returns (uint) {
         if (instanceId >= instances.length) {
             throw;
         }
@@ -94,6 +113,10 @@ contract Main {
         return instance.reward;
     }
 
+    function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
+        return sha3(output[0]);
+    }
+
     function getNumberOfProblems() constant returns (uint) {
         return problems.length;
     }
@@ -111,12 +134,12 @@ contract Main {
         return instances.length;
     }
 
-    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState) {
+    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32) {
         if (instanceId >= instances.length) {
             throw;
         }
 
         Instance instance = instances[instanceId];
-        return (instance.contractAddress, instance.input, instance.reward, instance.state);
+        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash);
     }
 }

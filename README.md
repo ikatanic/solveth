@@ -1,6 +1,1 @@
-# factorize
-
-```
-truffle migrate --network ropsten
-truffle serve
-```
+# Ethereum platform for bounty-problem-solving (WIP)

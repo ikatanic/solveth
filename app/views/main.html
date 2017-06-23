@@ -1,6 +1,14 @@
-<h1>Tasks</h1>
-<div ng-repeat="task in tasks">
-    Task id: {{task[0]}}
-    Number: {{task[1]}}
-    Reward in Ether: {{task[2]}}
+<h1>Problems</h1>
+<div ng-repeat="problem in problems">
+    Contract address: {{problem[0]}}
+    Description: {{problem[1]}}
+</div>
+
+<h1>Instances</h1>
+<div ng-repeat="instance in instances">
+    Contract address: {{instance[0]}}
+    Input: {{instance[1]}}
+    Reward: {{instance[2]}}
+    State: {{instance[3]}}
+    Commitment hash: {{instance[4]}}
 </div>
