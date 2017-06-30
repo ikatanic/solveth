@@ -118,6 +118,7 @@ app.controller("MainController", function ($scope) {
             $scope.instances = [];
             for (var i = 0; i < numberOfInstances; ++i) {
                 contract.getInstance.call(i).then(function(result) {
+                    console.log(result);
                     $scope.instances.push(result);
                     $scope.$apply();
                 });
@@ -152,10 +153,40 @@ app.controller("NewTaskController", function ($scope) {
     };
 });
 
+// xors two sha-3 outputs represented as hex strings;
+// returns result in same format
+const xorHex = (a, b) => {
+   var result = '0x';
+   for (var i = 2; i < a.length; ++i) {
+       var x = Number('0x' + a[i]);
+       var y = Number('0x' + b[i]);
+       result += web3.toHex(x ^ y)[2];
+   }
+   return result;
+};
 
 const computeCommitmentHash = (address, output) => {
-    return sha3(output[0]);
+    var result = sha3(address);
+    for (var i = 0; i < output.length; ++i) {
+        result = xorHex(result, sha3(output[i]));
+    }
+    return sha3(result);
 };
+
+// generates random 256 bits and returns as hex string.
+const randomHexNumber = () => {
+    var bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    var result = '0x';
+    for (var i = 0; i < bytes.length; ++i) {
+        var hexByte = web3.toHex(bytes[i]).slice(2);
+        while (hexByte.length < 2) {
+            hexByte = '0' + hexByte;
+        }
+        result += hexByte;
+    }
+    return result;
+}
 
 app.controller("SolveInstanceController", function ($scope) {
     $scope.loading = false;
@@ -165,13 +196,14 @@ app.controller("SolveInstanceController", function ($scope) {
     $scope.accounts = web3.eth.accounts;
 
     $scope.commitSolution = function(address, instanceId, output) {
-        output = output.split(' ');
-        console.log(output);
+        output = output.split(' ').map(Number);
+
         Main.deployed().then(function(contract) {
             $scope.loading = true;
-            commitmentHash = computeCommitmentHash(address, [1, 2]);
-            console.log(commitmentHash);
+            commitmentHash = computeCommitmentHash(address, output);
+            console.log("my hash: " + commitmentHash);
             contract.commitSolution(instanceId, commitmentHash, {from: address, gas: 200000}).then(function(result) {
+                console.log(result);
                 $scope.success = true;
                 $scope.loading = false;
                 $scope.$apply();
@@ -182,16 +214,27 @@ app.controller("SolveInstanceController", function ($scope) {
             });
             return this;
         });
+    };
+
+    $scope.revealSolution = function(address, instanceId, output) {
+        output = output.split(' ').map(Number);
 
         Main.deployed().then(function(contract) {
-            contract.computeCommitmentHash.call(address, [1, 2]).then(function(result) {
+            $scope.loading = true;
+            contract.revealSolution(instanceId, output, {from: address, gas: 200000}).then(function(result) {
                 console.log(result);
+                $scope.success = true;
+                $scope.loading = false;
+                $scope.$apply();
             }).catch(function(e) {
-                console.log(e);
+                $scope.error = e;
+                $scope.loading = false;
+                $scope.$apply();
             });
             return this;
         });
-    };});
+    };
+});
 
 app.config(function($routeProvider) {
     $routeProvider.when('/', {

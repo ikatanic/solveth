@@ -59,7 +59,7 @@ contract Main {
         instances.push(Instance({
           contractAddress: contractAddress,
           input: input,
-          reward: 17,
+          reward: 1,
           state: InstanceState.Unsolved,
           commitmentHash: 0x0,
           commitedSolver: 0x0
@@ -67,7 +67,7 @@ contract Main {
         return instanceId;
     }
 
-    function commitSolution(uint instanceId, bytes32 commitmentHash) returns (uint) {
+    function commitSolution(uint instanceId, bytes32 commitmentHash) {
         if (instanceId >= instances.length) {
             throw;
         }
@@ -79,7 +79,10 @@ contract Main {
         instance.state = InstanceState.Commited;
         instance.commitmentHash = commitmentHash;
         instance.commitedSolver = msg.sender;
-        return 1;
+    }
+
+    function test(bytes32 x) returns (bytes32) {
+        return x;
     }
 
     function revealSolution(uint instanceId, uint[] output) returns (uint) {
@@ -92,11 +95,7 @@ contract Main {
         }
 
         // verify commitmentHash
-        bytes32 commitmentHash = sha3(msg.sender);
-        for (uint i = 0; i < output.length; ++i) {
-            commitmentHash = sha3(commitmentHash ^ sha3(output[i]));
-        }
-
+        bytes32 commitmentHash = computeCommitmentHash(msg.sender, output);
         if (commitmentHash != instance.commitmentHash) {
             throw;
         }
@@ -107,14 +106,18 @@ contract Main {
 
         // task solved! send reward
         instance.state = InstanceState.Solved;
-        if (!msg.sender.send(instance.reward)) {
-            throw;
-        }
+//        if (!msg.sender.send(instance.reward)) {
+//            throw;
+//        }
         return instance.reward;
     }
 
     function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
-        return sha3(output[0]);
+        bytes32 result = sha3(solver);
+        for (uint i = 0; i < output.length; ++i) {
+            result = result ^ sha3(output[i]);
+        }
+        return sha3(result);
     }
 
     function getNumberOfProblems() constant returns (uint) {

@@ -4,20 +4,20 @@
         <form solution>
             <div class="form-group">
                 <label for="addressFrom">Your address</label>
-                <select ng-model="address_from" id="addressFrom">
+                <select ng-model="addressFrom" id="addressFrom">
                     <option ng-repeat="account in accounts">{{account}}</option>
                 </select>
             </div>
             <div class="form-group">
                 <label for="instanceId">Instance id</label>
-                <input type="number" class="form-control" id="numberToFactorize" placeholder="1" ng-model="task_id">
+                <input type="number" class="form-control" id="instanceId" placeholder="1" ng-model="instanceId">
             </div>
             <div class="form-group">
-                <label for="factor">Solution</label>
-                <input type="text" class="form-control" id="factor" placeholder="1" ng-model="factor">
+                <label for="solution">Solution</label>
+                <input type="text" class="form-control" id="solution" placeholder="space separated array of uints" ng-model="solution">
             </div>
-            <button ng-click="commitSolution(address_from, instanceId, factor)" class="btn btn-default">Commit</button>
-            <button ng-click="commitSolution(address_from, instanceId, factor)" class="btn btn-default">Reveal</button>
+            <button ng-click="commitSolution(addressFrom, instanceId, solution)" class="btn btn-default">Commit</button>
+            <button ng-click="revealSolution(addressFrom, instanceId, solution)" class="btn btn-default">Reveal</button>
         </form>
 
     </div>
