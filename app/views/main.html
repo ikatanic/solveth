@@ -1,14 +1,30 @@
 <h1>Problems</h1>
-<div ng-repeat="problem in problems">
-    Contract address: {{problem[0]}}
-    Description: {{problem[1]}}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">Contract address</div>
+        <div class="col-md-4">Description</div>
+    </div>
+
+    <div ng-repeat="problem in problems">
+        <div class="row">
+            <div class="col-md-4">{{problem[0]}}</div>
+            <div class="col-md-4">{{problem[1]}}</div>
+        </div>
+    </div>
 </div>
 
 <h1>Instances</h1>
-<div ng-repeat="instance in instances">
-    Contract address: {{instance[0]}}
-    Input: {{instance[1]}}
-    Reward: {{instance[2]}}
-    State: {{instance[3]}}
-    Commitment hash: {{instance[4]}}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">Contract address</div>
+        <div class="col-md-2">Input</div>
+        <div class="col-md-1">Reward</div>
+        <div class="col-md-4">Status</div>
+    </div>
+    <div ng-repeat="instance in instances">
+        <div class="col-md-4">{{instance[0]}}</div>
+        <div class="col-md-2">{{instance[1]}}</div>
+        <div class="col-md-1">{{instance[2]}}</div>
+        <div class="col-md-4">{{instance[3]}}</div>
+    </div>
 </div>

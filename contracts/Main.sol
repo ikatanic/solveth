@@ -17,18 +17,20 @@ contract Main {
         uint[] input;
         uint reward;
         InstanceState state;
+
         bytes32 commitmentHash;
         address commitedSolver;
+
+        uint[] solution;
     }
 
     Problem[] problems;
     Instance[] instances;
-    uint[] a;
+
+    uint[] emptyArray;
 
     function Main(address firstProblemContractAddress, string description) {
         newProblem(firstProblemContractAddress, description);
-        a.push(15);
-        newInstance(firstProblemContractAddress, a);
     }
 
     function newProblem(address contractAddress, string description) {
@@ -38,33 +40,22 @@ contract Main {
        }));
     }
 
-//    function newInstance(address contractAddress, uint[] input) payable returns (uint) {
-//        if (msg.value > 0) {
-//            uint instanceId = instances.length;
-//            instances.push(Instance({
-//                contractAddress: contractAddress,
-//                input: input,
-//                reward: msg.value,
-//                state: InstanceState.Unsolved,
-//                commitmentHash: 0x0,
-//                commitedSolver: 0x0
-//            }));
-//            return instanceId;
-//        } else {
-//            throw;
-//        }
-//    }
-    function newInstance(address contractAddress, uint[] input) returns (uint) {
-        uint instanceId = instances.length;
-        instances.push(Instance({
-          contractAddress: contractAddress,
-          input: input,
-          reward: 1,
-          state: InstanceState.Unsolved,
-          commitmentHash: 0x0,
-          commitedSolver: 0x0
-        }));
-        return instanceId;
+    function newInstance(address contractAddress, uint[] input) payable returns (uint) {
+        if (msg.value > 0) {
+            uint instanceId = instances.length;
+            instances.push(Instance({
+            contractAddress: contractAddress,
+            input: input,
+            reward: msg.value,
+            state: InstanceState.Unsolved,
+            commitmentHash: 0x0,
+            commitedSolver: 0x0,
+            solution: emptyArray
+            }));
+            return instanceId;
+        } else {
+            throw;
+        }
     }
 
     function commitSolution(uint instanceId, bytes32 commitmentHash) {
@@ -81,15 +72,11 @@ contract Main {
         instance.commitedSolver = msg.sender;
     }
 
-    function test(bytes32 x) returns (bytes32) {
-        return x;
-    }
-
     function revealSolution(uint instanceId, uint[] output) returns (uint) {
         if (instanceId >= instances.length) {
             throw;
         }
-        Instance instance = instances[instanceId]; // reference to instance
+        Instance instance = instances[instanceId]; // reference to the instance
         if (instance.state != InstanceState.Commited || instance.commitedSolver != msg.sender) {
             throw;
         }
@@ -106,6 +93,8 @@ contract Main {
 
         // task solved! send reward
         instance.state = InstanceState.Solved;
+        instance.solution = output;
+        //instance.solution = output;
 //        if (!msg.sender.send(instance.reward)) {
 //            throw;
 //        }
@@ -120,6 +109,7 @@ contract Main {
         return sha3(result);
     }
 
+    // getters
     function getNumberOfProblems() constant returns (uint) {
         return problems.length;
     }
@@ -137,12 +127,12 @@ contract Main {
         return instances.length;
     }
 
-    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32) {
+    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32, address, uint[]) {
         if (instanceId >= instances.length) {
             throw;
         }
 
         Instance instance = instances[instanceId];
-        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash);
+        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.solution);
     }
 }

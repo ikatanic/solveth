@@ -118,7 +118,15 @@ app.controller("MainController", function ($scope) {
             $scope.instances = [];
             for (var i = 0; i < numberOfInstances; ++i) {
                 contract.getInstance.call(i).then(function(result) {
-                    console.log(result);
+                    if (result[3] == 0) { // Unsolved
+                        result[3] = "Unsolved"
+                    } else if (result[3] == 1) { // Commited
+                        result[3] = "Commited by " + result[5];
+                    } else if (result[3] == 2) { // Solved
+                        result[3] = "Solved: " + result[6];
+                    }
+                    result[2] = web3.fromWei(result[2]); // wei -> ether
+                    result[1] = result[1].map(Number);
                     $scope.instances.push(result);
                     $scope.$apply();
                 });
@@ -129,17 +137,19 @@ app.controller("MainController", function ($scope) {
     });
 });
 
-app.controller("NewTaskController", function ($scope) {
+app.controller("NewInstanceController", function ($scope) {
     $scope.loading = false;
     $scope.success = false;
     $scope.error = false;
 
     $scope.accounts = web3.eth.accounts;
 
-    $scope.newTask = function(address, n, reward) {
-        Factorize.deployed().then(function(contract) {
+    $scope.newInstance = function(address, contractAddress, input, reward) {
+        console.log(contractAddress);
+        input = input.split(' ').map(Number);
+        Main.deployed().then(function(contract) {
             $scope.loading = true;
-            contract.newTask(n, {from: address, value: web3.toWei(reward, "ether"), gas: 200000}).then(function(result) {
+            contract.newInstance(contractAddress, input, {from: address, value: web3.toWei(reward, "ether"), gas: 200000}).then(function(result) {
                 $scope.success = true;
                 $scope.loading = false;
                 $scope.$apply();
@@ -240,9 +250,9 @@ app.config(function($routeProvider) {
     $routeProvider.when('/', {
         templateUrl: 'views/main.html',
         controller: 'MainController'
-    }).when('/newtask', {
-        templateUrl: 'views/newtask.html',
-        controller: 'NewTaskController'
+    }).when('/newinstance', {
+        templateUrl: 'views/newinstance.html',
+        controller: 'NewInstanceController'
     }).when('/solveinstance', {
         templateUrl: 'views/solveinstance.html',
         controller: 'SolveInstanceController'
