@@ -20,6 +20,7 @@ contract Main {
 
         bytes32 commitmentHash;
         address commitedSolver;
+        uint commitTimestamp;
 
         uint[] solution;
     }
@@ -46,6 +47,7 @@ contract Main {
                 state: InstanceState.Unsolved,
                 commitmentHash: 0x0,
                 commitedSolver: 0x0,
+                commitTimestamp: 0,
                 solution: emptyArray
             }));
             return instanceId;
@@ -54,18 +56,24 @@ contract Main {
         }
     }
 
+    function commitExpired(uint instanceId) constant returns (bool) {
+        return now >= instances[instanceId].commitTimestamp + 5 minutes;
+    }
+
     function commitSolution(uint instanceId, bytes32 commitmentHash) {
         if (instanceId >= instances.length) {
             throw;
         }
         Instance instance = instances[instanceId]; // reference to instance
-        if (instance.state != InstanceState.Unsolved) {
+
+        if (instance.state == InstanceState.Unsolved || (instance.state == InstanceState.Commited && commitExpired(instanceId))) {
+            instance.state = InstanceState.Commited;
+            instance.commitmentHash = commitmentHash;
+            instance.commitedSolver = msg.sender;
+            instance.commitTimestamp = now;
+        } else {
             throw;
         }
-
-        instance.state = InstanceState.Commited;
-        instance.commitmentHash = commitmentHash;
-        instance.commitedSolver = msg.sender;
     }
 
     function revealSolution(uint instanceId, uint[] output) {
@@ -121,12 +129,16 @@ contract Main {
         return instances.length;
     }
 
-    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32, address, uint[]) {
+    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32, address, uint, uint[]) {
         if (instanceId >= instances.length) {
             throw;
         }
 
         Instance instance = instances[instanceId];
-        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.solution);
+        InstanceState state = instance.state;
+        if (state == InstanceState.Commited && commitExpired(instanceId)) {
+            state = InstanceState.Unsolved;
+        }
+        return (instance.contractAddress, instance.input, instance.reward, state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
     }
 }

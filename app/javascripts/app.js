@@ -94,10 +94,16 @@ var sha3num = function sha3num(value) {
     return web3.sha3(paddedArgs, { encoding: 'hex' });
 };
 
-
 // #####################################################################################################################
 
+
 var app = angular.module("solvethDapp", ['ngRoute']);
+
+const formatTimestamp = (t) => {
+    var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+    d.setUTCSeconds(Number(t));
+    return d;
+};
 
 app.controller("MainController", function ($scope) {
     Main.deployed().then(function (contract) {
@@ -121,9 +127,9 @@ app.controller("MainController", function ($scope) {
                     if (result[3] == 0) { // Unsolved
                         result[3] = "Unsolved"
                     } else if (result[3] == 1) { // Commited
-                        result[3] = "Commited by " + result[5];
+                        result[3] = "Commited by " + result[5] + " on " + formatTimestamp(result[6]);
                     } else if (result[3] == 2) { // Solved
-                        result[3] = "Solved: " + result[6];
+                        result[3] = "Solved: " + result[7];
                     }
                     result[2] = web3.fromWei(result[2]); // wei -> ether
                     result[1] = result[1].map(Number);
