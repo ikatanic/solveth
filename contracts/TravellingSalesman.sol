@@ -7,7 +7,7 @@ contract TravellingSalesman {
         // i-th edge has length c_i and goes from a_i to b_i.
 
         if (input.length < 3) {
-           return false;
+            return false;
         }
         uint N = input[0];
         uint M = input[1];
@@ -21,8 +21,9 @@ contract TravellingSalesman {
         }
 
         uint route_length = 0;
+        bool route_good = true;
 
-        for (uint i = 0; i < N; ++i) {
+        for (uint i = 0; i < N && route_good; ++i) {
             uint x = output[i];
             for (uint k = 0; k < i; ++k) {
                 if (x == output[k]) {
@@ -41,12 +42,11 @@ contract TravellingSalesman {
                     break;
                 }
             }
-            if (!edge_found) {
-                return false;
-            }
+
+            route_good = route_good && edge_found;
             route_length += edge_length;
         }
-
-        return route_length < L;
+        route_good = route_good && (route_length < L);
+        return route_good;
     }
 }
