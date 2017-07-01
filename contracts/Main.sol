@@ -135,10 +135,6 @@ contract Main {
         }
 
         Instance instance = instances[instanceId];
-        InstanceState state = instance.state;
-        if (state == InstanceState.Commited && commitExpired(instanceId)) {
-            state = InstanceState.Unsolved;
-        }
-        return (instance.contractAddress, instance.input, instance.reward, state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
+        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
     }
 }
