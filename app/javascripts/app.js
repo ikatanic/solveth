@@ -145,11 +145,34 @@ app.controller("NewInstanceController", function ($scope) {
     $scope.accounts = web3.eth.accounts;
 
     $scope.newInstance = function(address, contractAddress, input, reward) {
-        console.log(contractAddress);
         input = input.split(' ').map(Number);
         Main.deployed().then(function(contract) {
             $scope.loading = true;
             contract.newInstance(contractAddress, input, {from: address, value: web3.toWei(reward, "ether"), gas: 200000}).then(function(result) {
+                $scope.success = true;
+                $scope.loading = false;
+                $scope.$apply();
+            }).catch(function(e) {
+                $scope.error = e;
+                $scope.loading = false;
+                $scope.$apply();
+            });
+            return this;
+        });
+    };
+});
+
+app.controller("NewProblemController", function ($scope) {
+    $scope.loading = false;
+    $scope.success = false;
+    $scope.error = false;
+
+    $scope.accounts = web3.eth.accounts;
+
+    $scope.newProblem = function(address, contractAddress, description) {
+        Main.deployed().then(function(contract) {
+            $scope.loading = true;
+            contract.newProblem(contractAddress, description, {from: address, gas: 200000}).then(function(result) {
                 $scope.success = true;
                 $scope.loading = false;
                 $scope.$apply();
@@ -211,9 +234,7 @@ app.controller("SolveInstanceController", function ($scope) {
         Main.deployed().then(function(contract) {
             $scope.loading = true;
             commitmentHash = computeCommitmentHash(address, output);
-            console.log("my hash: " + commitmentHash);
             contract.commitSolution(instanceId, commitmentHash, {from: address, gas: 200000}).then(function(result) {
-                console.log(result);
                 $scope.success = true;
                 $scope.loading = false;
                 $scope.$apply();
@@ -253,6 +274,9 @@ app.config(function($routeProvider) {
     }).when('/newinstance', {
         templateUrl: 'views/newinstance.html',
         controller: 'NewInstanceController'
+    }).when('/newproblem', {
+        templateUrl: 'views/newproblem.html',
+        controller: 'NewProblemController'
     }).when('/solveinstance', {
         templateUrl: 'views/solveinstance.html',
         controller: 'SolveInstanceController'

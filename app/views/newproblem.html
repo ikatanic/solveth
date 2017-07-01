@@ -1,7 +1,7 @@
 <div ng-show="!loading && !success">
     <div class="col-lg-6">
-        <h1>Submit new instance</h1>
-        <form ng-submit="newInstance(addressFrom, contractAddress, instanceInput, rewardInEther)">
+        <h1>Submit new problem</h1>
+        <form ng-submit="newProblem(addressFrom, contractAddress, description)">
             <div class="form-group">
                 <label for="addressFrom">Your address</label>
                 <select ng-model="addressFrom" id="addressFrom">
@@ -13,12 +13,8 @@
                 <input type="text" class="form-control" id="contractAddress" placeholder="0x123.." ng-model="contractAddress">
             </div>
             <div class="form-group">
-                <label for="instanceInput">Input</label>
-                <input type="text" class="form-control" id="instanceInput" placeholder="space separated array of uints" ng-model="instanceInput">
-            </div>
-            <div class="form-group">
-                <label for="rewardInEther">Reward in Ether</label>
-                <input type="number" class="form-control" id="rewardInEther" placeholder="1" ng-model="rewardInEther">
+                <label for="description">Description</label>
+                <input type="text" class="form-control" id="description" placeholder="describe the problem and I/O format" ng-model="description">
             </div>
             <button type="submit" class="btn btn-default">Submit</button>
         </form>

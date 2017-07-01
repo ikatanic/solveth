@@ -29,10 +29,6 @@ contract Main {
 
     uint[] emptyArray;
 
-    function Main(address firstProblemContractAddress, string description) {
-        newProblem(firstProblemContractAddress, description);
-    }
-
     function newProblem(address contractAddress, string description) {
        problems.push(Problem({
            contractAddress: contractAddress,
@@ -44,13 +40,13 @@ contract Main {
         if (msg.value > 0) {
             uint instanceId = instances.length;
             instances.push(Instance({
-            contractAddress: contractAddress,
-            input: input,
-            reward: msg.value,
-            state: InstanceState.Unsolved,
-            commitmentHash: 0x0,
-            commitedSolver: 0x0,
-            solution: emptyArray
+                contractAddress: contractAddress,
+                input: input,
+                reward: msg.value,
+                state: InstanceState.Unsolved,
+                commitmentHash: 0x0,
+                commitedSolver: 0x0,
+                solution: emptyArray
             }));
             return instanceId;
         } else {
@@ -72,7 +68,7 @@ contract Main {
         instance.commitedSolver = msg.sender;
     }
 
-    function revealSolution(uint instanceId, uint[] output) returns (uint) {
+    function revealSolution(uint instanceId, uint[] output) {
         if (instanceId >= instances.length) {
             throw;
         }
@@ -94,11 +90,9 @@ contract Main {
         // task solved! send reward
         instance.state = InstanceState.Solved;
         instance.solution = output;
-        //instance.solution = output;
-//        if (!msg.sender.send(instance.reward)) {
-//            throw;
-//        }
-        return instance.reward;
+        if (!msg.sender.send(instance.reward)) {
+            throw;
+        }
     }
 
     function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
