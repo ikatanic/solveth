@@ -148,7 +148,7 @@ app.controller("NewInstanceController", function ($scope) {
         input = input.split(' ').map(Number);
         Main.deployed().then(function(contract) {
             $scope.loading = true;
-            contract.newInstance(contractAddress, input, {from: address, value: web3.toWei(reward, "ether"), gas: 200000}).then(function(result) {
+            contract.newInstance(contractAddress, input, {from: address, value: web3.toWei(reward, "ether"), gas: 2000000}).then(function(result) {
                 $scope.success = true;
                 $scope.loading = false;
                 $scope.$apply();

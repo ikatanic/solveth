@@ -1,11 +1,22 @@
 var Main = artifacts.require("./Main.sol");
 var Factorization = artifacts.require("./Factorization.sol");
+var TravellingSalesman = artifacts.require("./TravellingSalesman.sol");
 
 module.exports = function(deployer) {
     deployer.deploy(Factorization).then(function() {
-        return deployer.deploy(Main).then(function() {
-            return Main.deployed().then(function (contract) {
-                return contract.newProblem(Factorization.address, "Find a factor of a number", {from: web3.eth.accounts[0], gas: 200000});
+        return deployer.deploy(TravellingSalesman).then(function () {
+            return deployer.deploy(Main).then(function () {
+                return Main.deployed().then(function (contract) {
+                    return contract.newProblem(Factorization.address, "Find a factor of a number", {
+                        from: web3.eth.accounts[0],
+                        gas: 200000
+                    }).then(function (result) {
+                        return contract.newProblem(TravellingSalesman.address, "Find a short travelling salesman route", {
+                            from: web3.eth.accounts[0],
+                            gas: 200000
+                        })
+                    });
+                });
             });
         });
     });
