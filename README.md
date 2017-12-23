@@ -20,7 +20,7 @@ Install ethereum test blockchain:
 ```bash
 npm install -g ganache-cli
 ```
-Leave it running (on localhost:8545 by default):
+Leave it running (on `localhost:8545` by default):
 ```
 ganache-cli
 ```
