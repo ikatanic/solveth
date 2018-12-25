@@ -1,6 +1,17 @@
 pragma solidity ^0.4.8;
 
 contract Factorization {
+    string constant name = "Factorization";
+    string constant description = "Find a factor of a number";
+
+    function getName() public view returns(string) {
+        return name;
+    }
+
+    function getDescription() public view returns(string) {
+        return description;
+    }
+
     function check(uint[] input, uint[] output) returns (bool) {
         if (input.length != 1 || output.length != 1) {
             return false;

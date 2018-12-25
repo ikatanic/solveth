@@ -1,6 +1,17 @@
 pragma solidity ^0.4.8;
 
 contract TravellingSalesman {
+    string constant name = "Travelling Salesman";
+    string constant description = "Find a short travelling salesman route";
+    
+    function getName() public view returns(string) {
+        return name;
+    }
+
+    function getDescription() public view returns(string) {
+        return description;
+    }
+
     function check(uint[] input, uint[] output) returns (bool) {
         // Input format is: N M L a_1 b_1 c_1 ... a_M b_M c_M
         // where N is number of nodes (indexed 1..N), M is number of edges, L is upper bound on route length.

@@ -1,3 +1,7 @@
+import web3 from "web3";
+
+
+// SHA3 like in Solidity
 var cache = [
     '',
     ' ',
@@ -54,7 +58,7 @@ var encodeWithPadding = function encodeWithPadding(size) {
     return function (value) {
         return typeof value === 'string'
             // non-hex string
-            ? web3.toHex(value
+            ? web3.utils.toHex(value
                 // numbers, big numbers, and hex strings
             ) : encodeNum(size)(value);
     };
@@ -63,32 +67,36 @@ var encodeWithPadding = function encodeWithPadding(size) {
 /** Encodes a number in hex and adds padding to the given size if needed. Curried args. */
 var encodeNum = function encodeNum(size) {
     return function (value) {
-        return leftPad(web3.toHex(value < 0 ? value >>> 0 : value).slice(2), size / HEX_CHAR_SIZE, value < 0 ? 'F' : '0');
+        return leftPad(web3.utils.toHex(value < 0 ? value >>> 0 : value).slice(2), size / HEX_CHAR_SIZE, value < 0 ? 'F' : '0');
     };
 };
 
 /** Hashes one or more arguments, using a default size for numbers. */
 
-exports.default = function () {
+var sha3 = function () {
     for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
         args[_key] = arguments[_key];
     }
 
     var paddedArgs = args.map(encodeWithPadding(DEFAULT_SIZE)).join('');
-    return web3.sha3(paddedArgs, { encoding: 'hex' });
+    return web3.utils.sha3(paddedArgs, { encoding: 'hex' });
 };
 
 /** Hashes a single value at the given size. */
 
 
-var sha3withsize = exports.sha3withsize = function sha3withsize(value, size) {
+var sha3withsize = function sha3withsize(value, size) {
     var paddedArgs = encodeWithPadding(size)(value);
-    return web3.sha3(paddedArgs, { encoding: 'hex' });
+    return web3.utils.sha3(paddedArgs, { encoding: 'hex' });
 };
 
-var sha3num = exports.sha3num = function sha3num(value) {
+var sha3num = function sha3num(value) {
     var size = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : DEFAULT_SIZE;
 
     var paddedArgs = encodeNum(size)(value);
-    return web3.sha3(paddedArgs, { encoding: 'hex' });
+    return web3.utils.sha3(paddedArgs, { encoding: 'hex' });
 };
+
+// #####################################################################################################################
+
+export default sha3;

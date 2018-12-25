@@ -1,19 +1,22 @@
 pragma solidity ^0.4.8;
 
 contract ProblemContract {
+    function getDescription() public view returns(string);
+    function getName() public view returns(string);
     function check(uint[] input, uint[] output) returns (bool);
 }
 
 contract Main {
     struct Problem {
         address contractAddress;
+        string name;
         string description;
     }
 
     enum InstanceState {Unsolved, Commited, Solved}
 
     struct Instance {
-        address contractAddress;
+        uint problemId;
         uint[] input;
         uint reward;
         InstanceState state;
@@ -30,18 +33,19 @@ contract Main {
 
     uint[] emptyArray;
 
-    function newProblem(address contractAddress, string description) {
+    function newProblem(address contractAddress) {
        problems.push(Problem({
            contractAddress: contractAddress,
-           description: description
+           name: ProblemContract(contractAddress).getName(),
+           description: ProblemContract(contractAddress).getDescription()
        }));
     }
 
-    function newInstance(address contractAddress, uint[] input) payable returns (uint) {
-        if (msg.value > 0) {
+    function newInstance(uint problemId, uint[] input) payable returns (uint) {
+        if (msg.value > 0 && problemId >= 0 && problemId < problems.length) {
             uint instanceId = instances.length;
             instances.push(Instance({
-                contractAddress: contractAddress,
+                problemId: problemId,
                 input: input,
                 reward: msg.value,
                 state: InstanceState.Unsolved,
@@ -76,39 +80,37 @@ contract Main {
         }
     }
 
+
     function revealSolution(uint instanceId, uint[] output) {
-        if (instanceId >= instances.length) {
-            throw;
-        }
+        require(instanceId < instances.length, "Unknown instanceId");
+        
         Instance instance = instances[instanceId]; // reference to the instance
-        if (instance.state != InstanceState.Commited || instance.commitedSolver != msg.sender) {
-            throw;
-        }
+        require(instance.state == InstanceState.Commited, "Instance is not in the commited state");
+        require(instance.commitedSolver == msg.sender, "Sender is not the commited solver");
 
         // verify commitmentHash
         bytes32 commitmentHash = computeCommitmentHash(msg.sender, output);
-        if (commitmentHash != instance.commitmentHash) {
-            throw;
-        }
 
-        if (!ProblemContract(instance.contractAddress).check(instance.input, output)) {
-            throw;
-        }
+        require(commitmentHash == instance.commitmentHash, "Revealed solution is not the same as the commited one");
+
+        require(
+            ProblemContract(problems[instance.problemId].contractAddress).check(instance.input, output), 
+            "Solution is not passing problem's check function"
+        );
 
         // task solved! send reward
         instance.state = InstanceState.Solved;
         instance.solution = output;
-        if (!msg.sender.send(instance.reward)) {
-            throw;
-        }
+
+        require(msg.sender.send(instance.reward), "Failed to send reward");
     }
 
     function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
-        bytes32 result = sha3(solver);
+        bytes32 result = keccak256(solver);
         for (uint i = 0; i < output.length; ++i) {
-            result = result ^ sha3(output[i]);
+            result = result ^ keccak256(output[i]);
         }
-        return sha3(result);
+        return keccak256(result);
     }
 
     // getters
@@ -116,25 +118,25 @@ contract Main {
         return problems.length;
     }
 
-    function getProblem(uint problemId) constant returns (address, string) {
+    function getProblem(uint problemId) constant returns (address, string, string) {
         if (problemId >= problems.length) {
             throw;
         }
 
         Problem problem = problems[problemId];
-        return (problem.contractAddress, problem.description);
+        return (problem.contractAddress, problem.name, problem.description);
     }
 
     function getNumberOfInstances() constant returns (uint) {
         return instances.length;
     }
 
-    function getInstance(uint instanceId) constant returns (address, uint[], uint, InstanceState, bytes32, address, uint, uint[]) {
+    function getInstance(uint instanceId) constant returns (uint, uint[], uint, InstanceState, bytes32, address, uint, uint[]) {
         if (instanceId >= instances.length) {
             throw;
         }
 
         Instance instance = instances[instanceId];
-        return (instance.contractAddress, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
+        return (instance.problemId, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
     }
 }

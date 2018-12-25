@@ -1,19 +1,4 @@
-var DefaultBuilder = require("truffle-default-builder");
-
 module.exports = {
-    build: new DefaultBuilder({
-        "index.html": "index.html",
-        "app.js": [
-            "bower_components/angular/angular.js",
-            "bower_components/angular-route/angular-route.js",
-            "javascripts/app.js"
-        ],
-        "app.css": [
-            "stylesheets/app.css"
-        ],
-        "images/": "images/",
-        "views/": "views/"
-    }),
     networks: {
         development: {
             host: 'localhost',
