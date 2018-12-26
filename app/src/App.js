@@ -1,10 +1,8 @@
-import React from 'react';
-import './App.css';
+import React from "react";
+import "./App.css";
 import Platform from "./Platform";
 
-
 class App extends React.Component {
-
   state = { loading: true, drizzleState: null };
 
   componentDidMount() {
@@ -12,7 +10,6 @@ class App extends React.Component {
 
     // subscribe to changes in the store
     this.unsubscribe = drizzle.store.subscribe(() => {
-
       // every time the store updates, grab the state from drizzle
       const drizzleState = drizzle.store.getState();
 
@@ -21,13 +18,11 @@ class App extends React.Component {
         let loading = this.state.loading;
         this.setState({ loading: false, drizzleState });
         if (loading) {
-          console.log("here")
           const dataKey = drizzle.contracts.Main.methods.getNumberOfProblems.cacheCall();
           this.setState({ dataKey });
         }
       }
     });
-
   }
 
   compomentWillUnmount() {
@@ -39,9 +34,12 @@ class App extends React.Component {
 
     const { drizzleState, dataKey } = this.state;
 
-    return <Platform drizzle={this.props.drizzle}
-      drizzleState={this.state.drizzleState} />
-
+    return (
+      <Platform
+        drizzle={this.props.drizzle}
+        drizzleState={this.state.drizzleState}
+      />
+    );
   }
 }
 

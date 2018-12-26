@@ -2,10 +2,20 @@ import React from "react";
 import ProblemComponent from "./ProblemComponent";
 import { Problem, Instance } from "./types";
 import web3 from "web3";
-import sha3 from "./solidity-sha3"
+import ListGroup from "react-bootstrap/lib/ListGroup";
+import ListGroupItem from "react-bootstrap/lib/ListGroupItem";
+
+import ToggleButton from "react-bootstrap/lib/ToggleButton";
+import ToggleButtonGroup from "react-bootstrap/lib/ToggleButtonGroup";
 
 class Platform extends React.Component {
-  state = { problemKeys: [], instanceKeys: [], problemsCountKey: null, instancesCountKey: null };
+  state = {
+    problemKeys: [],
+    instanceKeys: [],
+    problemsCountKey: null,
+    instancesCountKey: null,
+    showSolved: false
+  };
 
   instances() {
     const { Main } = this.props.drizzleState.contracts;
@@ -16,7 +26,8 @@ class Platform extends React.Component {
       if (instanceKeys[i]) {
         const instanceData = Main.getInstance[instanceKeys[i]];
         if (instanceData) {
-          const instance = new Instance(i,
+          const instance = new Instance(
+            i,
             instanceData.value[0],
             instanceData.value[1],
             instanceData.value[2],
@@ -25,7 +36,7 @@ class Platform extends React.Component {
             instanceData.value[5],
             instanceData.value[6],
             instanceData.value[7],
-            instanceData.value[8],
+            instanceData.value[8]
           );
           instances.push(instance);
         }
@@ -43,7 +54,13 @@ class Platform extends React.Component {
       if (problemKeys[i]) {
         const problemData = Main.getProblem[problemKeys[i]];
         if (problemData) {
-          const problem = new Problem(i, problemData.value[0], problemData.value[1], problemData.value[2], []);
+          const problem = new Problem(
+            i,
+            problemData.value[0],
+            problemData.value[1],
+            problemData.value[2],
+            []
+          );
           problems.push(problem);
         }
       }
@@ -56,10 +73,10 @@ class Platform extends React.Component {
     }
 
     return {
-      problems: problems, instances: instances
-    }
+      problems: problems,
+      instances: instances
+    };
   }
-
 
   componentDidMount() {
     const { drizzle } = this.props;
@@ -71,9 +88,9 @@ class Platform extends React.Component {
     this.unsubscribe = drizzle.store.subscribe(() => {
       const drizzleState = drizzle.store.getState();
       if (drizzleState.drizzleStatus.initialized) {
-
         const { Main } = drizzleState.contracts;
-        const problemsCountData = Main.getNumberOfProblems[this.state.problemsCountKey];
+        const problemsCountData =
+          Main.getNumberOfProblems[this.state.problemsCountKey];
 
         if (problemsCountData) {
           const problemsCount = problemsCountData.value;
@@ -94,7 +111,8 @@ class Platform extends React.Component {
           }
         }
 
-        const instancesCountData = Main.getNumberOfInstances[this.state.instancesCountKey];
+        const instancesCountData =
+          Main.getNumberOfInstances[this.state.instancesCountKey];
 
         if (instancesCountData) {
           const instancesCount = instancesCountData.value;
@@ -124,41 +142,44 @@ class Platform extends React.Component {
   randomHexNumber = () => {
     var bytes = new Uint8Array(32);
     crypto.getRandomValues(bytes);
-    var result = '0x';
+    var result = "0x";
     for (var i = 0; i < bytes.length; ++i) {
-        var hexByte = web3.utils.toHex(bytes[i]).slice(2);
-        while (hexByte.length < 2) {
-            hexByte = '0' + hexByte;
-        }
-        result += hexByte;
+      var hexByte = web3.utils.toHex(bytes[i]).slice(2);
+      while (hexByte.length < 2) {
+        hexByte = "0" + hexByte;
+      }
+      result += hexByte;
     }
     return result;
-  }
+  };
 
-  getTxStatus = (stackId) => {
+  getTxStatus = stackId => {
     const { transactions, transactionStack } = this.props.drizzleState;
     const txHash = transactionStack[stackId];
     if (!txHash) return null;
     return transactions[txHash].status;
-  }
+  };
 
   xorHex = (a, b) => {
-    var result = '0x';
+    var result = "0x";
     for (var i = 2; i < a.length; ++i) {
-        var x = Number('0x' + a[i]);
-        var y = Number('0x' + b[i]);
-        result += web3.utils.toHex(x ^ y)[2];
+      var x = Number("0x" + a[i]);
+      var y = Number("0x" + b[i]);
+      result += web3.utils.toHex(x ^ y)[2];
     }
 
     return result;
- };
+  };
 
   computeCommitmentHash = (address, output) => {
     var result = web3.utils.soliditySha3(address);
     for (var i = 0; i < output.length; ++i) {
-        result = this.xorHex(result, web3.utils.soliditySha3({type: "uint256", value: output[i]}));
+      result = this.xorHex(
+        result,
+        web3.utils.soliditySha3({ type: "uint256", value: output[i] })
+      );
     }
-    
+
     result = web3.utils.soliditySha3(result);
     return result;
   };
@@ -170,15 +191,19 @@ class Platform extends React.Component {
     const address = drizzleState.accounts[0];
     const commitmentHash = this.computeCommitmentHash(address, solution);
 
-    const stackId = Main.methods["commitSolution"].cacheSend(instanceId, commitmentHash, {
-      from: address,
-      gas: 200000
-    });
+    const stackId = Main.methods["commitSolution"].cacheSend(
+      instanceId,
+      commitmentHash,
+      {
+        from: address,
+        gas: 200000
+      }
+    );
 
     return () => {
       return this.getTxStatus(stackId);
-    }
-  }
+    };
+  };
 
   revealSolution = (instanceId, solution) => {
     const { drizzle, drizzleState } = this.props;
@@ -186,16 +211,29 @@ class Platform extends React.Component {
 
     const address = drizzleState.accounts[0];
 
-    console.log(Main.methods)
-    const stackId = Main.methods["revealSolution"].cacheSend(instanceId, solution, {
-      from: address,
-      gas: 2000000
-    });
+    console.log(Main.methods);
+    const stackId = Main.methods["revealSolution"].cacheSend(
+      instanceId,
+      solution,
+      {
+        from: address,
+        gas: 2000000
+      }
+    );
 
     return () => {
       return this.getTxStatus(stackId);
-    }
-  }
+    };
+  };
+
+  handleClick = () => {
+    console.log("hi", this.state.showSolved);
+    this.setState({ showSolved: !this.state.showSolved });
+  };
+
+  handleChange = value => {
+    this.setState({ showSolved: value.length > 0 });
+  };
 
   render() {
     if (!this.props.drizzleState) return "";
@@ -205,26 +243,29 @@ class Platform extends React.Component {
     const problemsComponents = [];
     for (var i = 0; i < problems.length; ++i) {
       problemsComponents.push(
-        <li key={i}>
+        <ListGroupItem key={i}>
           <ProblemComponent
             problem={problems[i]}
             commitSolution={this.commitSolution}
             revealSolution={this.revealSolution}
+            showSolved={this.state.showSolved}
           />
-        </li>
+        </ListGroupItem>
       );
     }
 
     return (
       <div className="App">
-
         <main className="container">
           <div className="pure-g">
-            <ul>
-              {problemsComponents}
-            </ul>
-          </div></main></div>
-    )
+            <ToggleButtonGroup type="checkbox" onChange={this.handleChange}>
+              <ToggleButton value={0}>Show solved</ToggleButton>
+            </ToggleButtonGroup>
+            <ListGroup>{problemsComponents}</ListGroup>
+          </div>
+        </main>
+      </div>
+    );
   }
 }
 
