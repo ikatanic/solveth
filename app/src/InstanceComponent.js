@@ -2,8 +2,10 @@ import React from "react";
 
 import FormGroup from "react-bootstrap/lib/FormGroup";
 import FormControl from "react-bootstrap/lib/FormControl";
+import EtherScanAddressLink from "./etherscan";
+import { stringify } from "querystring";
 
-class NameForm extends React.Component {
+class SolutionForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = { value: "" };
@@ -17,8 +19,7 @@ class NameForm extends React.Component {
   }
 
   handleSubmit(event) {
-    const { handleSubmit } = this.props;
-    handleSubmit(this.state.value);
+    this.props.onSubmit(this.state.value);
     event.preventDefault();
   }
 
@@ -52,23 +53,6 @@ function TxStatus(props) {
   }
 }
 
-function SolutionSubmitter(props) {
-  if (props.submitStatus) {
-    if (props.submitStatus() == "success") {
-      return (
-        <NameForm handleSubmit={props.revealSolution} buttonLabel={"Reveal"} />
-      );
-    }
-  } else {
-    if (props.instance.state == 0) {
-      return (
-        <NameForm handleSubmit={props.commitSolution} buttonLabel={"Commit"} />
-      );
-    }
-  }
-  return "";
-}
-
 class InstanceComponent extends React.Component {
   state = { submitStatus: null };
 
@@ -87,27 +71,107 @@ class InstanceComponent extends React.Component {
   };
 
   render() {
-    const { instance } = this.props;
+    const { instance, myAddress } = this.props;
+
+    const instanceHeader = (
+      <div>
+        <div>id: {instance.id}</div>
+        <div>reward: {instance.reward / 1e9} ETH</div>
+        <div>attempts: {instance.commitCount}</div>
+        <div>
+          Input:
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl value={instance.input} readOnly={true} />
+          </FormGroup>
+        </div>
+      </div>
+    );
+
+    const solutionForm = (
+      <SolutionForm
+        onSubmit={
+          instance.state == 0 ? this.commitSolution : this.revealSolution
+        }
+        buttonLabel={instance.state == 0 ? "Commit" : "Reveal"}
+      />
+    );
+
+    let instanceBody;
+
+    if (instance.state == 0) {
+      // Unsolved
+      instanceBody = (
+        <div>
+          {" "}
+          <SolutionForm onSubmit={this.commitSolution} buttonLabel={"Commit"} />
+        </div>
+      );
+    } else if (instance.state == 1) {
+      // Commited
+      const commitDate = new Date(instance.commitTimestamp * 1000);
+
+      if (instance.commitedSolver == myAddress) {
+        // reveal
+        instanceBody = (
+          <div>
+            Commited by{" "}
+            <EtherScanAddressLink
+              address={instance.commitedSolver}
+              myAddress={myAddress}
+            />{" "}
+            at {commitDate.toLocaleDateString()}{" "}
+            {commitDate.toLocaleTimeString()}.
+            <div>
+              {" "}
+              <SolutionForm
+                onSubmit={this.revealSolution}
+                buttonLabel={"Reveal"}
+              />
+            </div>
+          </div>
+        );
+      } else {
+        instanceBody = (
+          <div>
+            Commited by{" "}
+            <EtherScanAddressLink
+              address={instance.commitedSolver}
+              myAddress={myAddress}
+            />{" "}
+            at {commitDate.toLocaleDateString()}{" "}
+            {commitDate.toLocaleTimeString()}.
+          </div>
+        );
+      }
+    } else if (instance.state == 2) {
+      // Solved
+      const commitDate = new Date(instance.commitTimestamp * 1000);
+
+      instanceBody = (
+        <div>
+          <div>
+            Solved by{" "}
+            <EtherScanAddressLink
+              address={instance.commitedSolver}
+              myAddress={myAddress}
+            />{" "}
+            at {commitDate.toLocaleDateString()}{" "}
+            {commitDate.toLocaleTimeString()}.
+          </div>
+          <div>
+            Solution:
+            <FormGroup controlId="formControlsTextarea">
+              <FormControl value={instance.solution} readOnly={true} />
+            </FormGroup>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div>
-        <div>{instance.id}</div>
-        <div>reward: {instance.reward}</div>
-        <div>state: {instance.state}</div>
-        <div>commitedSolver: {instance.commitedSolver}</div>
-        <div>commitmentHash: {instance.commitmentHash}</div>
-        <div>Input:</div>
-        <FormGroup controlId="formControlsTextarea">
-          <FormControl value={instance.input} readOnly={true} />
-        </FormGroup>
-
-        <TxStatus f={this.state.submitStatus} />
-        <SolutionSubmitter
-          instance={instance}
-          submitStatus={this.state.submitStatus}
-          commitSolution={this.commitSolution}
-          revealSolution={this.revealSolution}
-        />
+        {instanceHeader}
+        {instanceBody}
       </div>
     );
   }

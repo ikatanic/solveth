@@ -1,14 +1,24 @@
 import React from "react";
 import InstanceComponent from "./InstanceComponent";
+import NewInstance from "./NewInstance";
+
 import Collapsible from "react-collapsible";
 import Badge from "react-bootstrap/lib/Badge";
 import ListGroup from "react-bootstrap/lib/ListGroup";
 import ListGroupItem from "react-bootstrap/lib/ListGroupItem";
+import EtherScanAddressLink from "./etherscan";
+
 class ProblemComponent extends React.Component {
   componentDidMount() {}
 
   render() {
-    const { problem, commitSolution, revealSolution } = this.props;
+    const {
+      problem,
+      commitSolution,
+      revealSolution,
+      onNewInstance,
+      myAddress
+    } = this.props;
 
     let instancesComponents = [];
     let totalReward = 0;
@@ -43,40 +53,92 @@ class ProblemComponent extends React.Component {
             instance={problem.instances[i]}
             commitSolution={commitSolution}
             revealSolution={revealSolution}
+            myAddress={myAddress}
           />
         </ListGroupItem>
       );
 
-      totalReward += problem.instances[i].reward / 1e9;
+      totalReward += Number(problem.instances[i].reward);
     }
 
-    let problemHeader = (
-      <div className="container">
-        <div className="row">
-          <div className="col">
-            <h3>{problem.name}</h3>{" "}
-          </div>
-          <div className="col-sm">
-            <Badge className="badge-primary">
-              {instancesComponents.length}
-              {" instances"}
-            </Badge>{" "}
-            <Badge className="badge-primary">
-              {totalReward}
-              {" eth"}
-            </Badge>
-          </div>
+    let problemTitleClosed = (
+      <div className="row">
+        <div className="col">
+          <h3>{problem.name}</h3>{" "}
         </div>
-        <span>{problem.description} </span>
+        <div className="col">
+          <Badge className="badge-primary">
+            {instancesComponents.length}
+            {" instances"}
+          </Badge>{" "}
+          <Badge className="badge-primary">
+            {totalReward / 1e9}
+            {" ETH"}
+          </Badge>
+          {"  "}
+        </div>
+        <div className="col-">
+          <span className="fas fa-angle-down" />
+        </div>
       </div>
+    );
+
+    let problemTitleOpen = (
+      <div className="row">
+        <div className="col">
+          <h3>{problem.name}</h3>{" "}
+        </div>
+        <div className="col">
+          <Badge className="badge-primary">
+            {instancesComponents.length}
+            {" instances"}
+          </Badge>{" "}
+          <Badge className="badge-primary">
+            {totalReward / 1e9}
+            {" ETH"}
+          </Badge>
+          {"  "}
+        </div>
+        <div className="col-">
+          <span className="fas fa-angle-up" />
+        </div>
+      </div>
+    );
+
+    const newInstanceButton = (
+      <h4>
+        <span className="fas fa-plus" aria-hidden="true" /> New instance
+      </h4>
+    );
+    const newInstanceComponent = (
+      <ListGroupItem>
+        <Collapsible trigger={newInstanceButton} open={false}>
+          <NewInstance problemId={problem.id} onNewInstance={onNewInstance} />
+        </Collapsible>
+      </ListGroupItem>
     );
 
     return (
       <div className="App">
-        <Collapsible trigger={problemHeader} open={true}>
+        <Collapsible
+          trigger={problemTitleClosed}
+          triggerWhenOpen={problemTitleOpen}
+          open={false}
+        >
+          <div className="container">
+            <div>
+              {" "}
+              <EtherScanAddressLink address={problem.contractAddress} />
+            </div>
+            <p>{problem.description} </p>
+          </div>
+
           <main className="container">
             <div className="pure-g">
-              <ListGroup>{instancesComponents}</ListGroup>
+              <ListGroup>
+                {instancesComponents}
+                {newInstanceComponent}
+              </ListGroup>
             </div>
           </main>
         </Collapsible>

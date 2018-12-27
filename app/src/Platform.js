@@ -4,6 +4,8 @@ import { Problem, Instance } from "./types";
 import web3 from "web3";
 import ListGroup from "react-bootstrap/lib/ListGroup";
 import ListGroupItem from "react-bootstrap/lib/ListGroupItem";
+import Collapsible from "react-collapsible";
+import NewProblem from "./NewProblem";
 
 import ToggleButton from "react-bootstrap/lib/ToggleButton";
 import ToggleButtonGroup from "react-bootstrap/lib/ToggleButtonGroup";
@@ -36,7 +38,9 @@ class Platform extends React.Component {
             instanceData.value[5],
             instanceData.value[6],
             instanceData.value[7],
-            instanceData.value[8]
+            instanceData.value[8],
+            instanceData.value[9],
+            instanceData.value[10]
           );
           instances.push(instance);
         }
@@ -184,11 +188,15 @@ class Platform extends React.Component {
     return result;
   };
 
+  myAddress = () => {
+    return this.props.drizzleState.accounts[0];
+  };
+
   commitSolution = (instanceId, solution) => {
     const { drizzle, drizzleState } = this.props;
     const { Main } = drizzle.contracts;
 
-    const address = drizzleState.accounts[0];
+    const address = this.myAddress();
     const commitmentHash = this.computeCommitmentHash(address, solution);
 
     const stackId = Main.methods["commitSolution"].cacheSend(
@@ -205,13 +213,45 @@ class Platform extends React.Component {
     };
   };
 
+  newInstance = (problemId, input, reward) => {
+    const { drizzle } = this.props;
+    const { Main } = drizzle.contracts;
+
+    const address = this.myAddress();
+    console.log("here");
+    const stackId = Main.methods["newInstance"].cacheSend(problemId, input, {
+      from: address,
+      gas: 200000,
+      value: reward
+    });
+
+    return () => {
+      return this.getTxStatus(stackId);
+    };
+  };
+
+  newProblem = contractAddress => {
+    const { drizzle } = this.props;
+    const { Main } = drizzle.contracts;
+
+    const address = this.myAddress();
+
+    const stackId = Main.methods["newProblem"].cacheSend(contractAddress, {
+      from: address,
+      gas: 200000
+    });
+
+    return () => {
+      return this.getTxStatus(stackId);
+    };
+  };
+
   revealSolution = (instanceId, solution) => {
     const { drizzle, drizzleState } = this.props;
     const { Main } = drizzle.contracts;
 
     const address = drizzleState.accounts[0];
 
-    console.log(Main.methods);
     const stackId = Main.methods["revealSolution"].cacheSend(
       instanceId,
       solution,
@@ -246,23 +286,40 @@ class Platform extends React.Component {
         <ListGroupItem key={i}>
           <ProblemComponent
             problem={problems[i]}
+            myAddress={this.myAddress()}
             commitSolution={this.commitSolution}
             revealSolution={this.revealSolution}
+            onNewInstance={this.newInstance}
             showSolved={this.state.showSolved}
           />
         </ListGroupItem>
       );
     }
 
+    const newProblemButton = (
+      <h4>
+        <span className="fas fa-plus" aria-hidden="true" /> New problem
+      </h4>
+    );
+
+    const newProblemComponent = (
+      <ListGroupItem>
+        <Collapsible trigger={newProblemButton} open={false}>
+          <NewProblem onNewProblem={this.newProblem} />
+        </Collapsible>
+      </ListGroupItem>
+    );
+
     return (
       <div className="App">
         <main className="container">
-          <div className="pure-g">
-            <ToggleButtonGroup type="checkbox" onChange={this.handleChange}>
-              <ToggleButton value={0}>Show solved</ToggleButton>
-            </ToggleButtonGroup>
-            <ListGroup>{problemsComponents}</ListGroup>
-          </div>
+          <ToggleButtonGroup type="checkbox" onChange={this.handleChange}>
+            <ToggleButton value={0}>Show solved</ToggleButton>
+          </ToggleButtonGroup>
+          <ListGroup>
+            {problemsComponents}
+            {newProblemComponent}
+          </ListGroup>
         </main>
       </div>
     );

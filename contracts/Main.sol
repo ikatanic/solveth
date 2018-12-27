@@ -19,8 +19,11 @@ contract Main {
         uint problemId;
         uint[] input;
         uint reward;
+        uint creationTimestamp;
+
         InstanceState state;
 
+        uint commitCount;
         bytes32 commitmentHash;
         address commitedSolver;
         uint commitTimestamp;
@@ -33,12 +36,14 @@ contract Main {
 
     uint[] emptyArray;
 
-    function newProblem(address contractAddress) {
+    function newProblem(address contractAddress) returns (uint) {
+       uint problemId = problems.length;
        problems.push(Problem({
            contractAddress: contractAddress,
            name: ProblemContract(contractAddress).getName(),
            description: ProblemContract(contractAddress).getDescription()
        }));
+       return problemId;
     }
 
     function newInstance(uint problemId, uint[] input) payable returns (uint) {
@@ -48,7 +53,9 @@ contract Main {
                 problemId: problemId,
                 input: input,
                 reward: msg.value,
+                creationTimestamp: now,
                 state: InstanceState.Unsolved,
+                commitCount: 0,
                 commitmentHash: 0x0,
                 commitedSolver: 0x0,
                 commitTimestamp: 0,
@@ -61,20 +68,29 @@ contract Main {
     }
 
     function commitExpired(uint instanceId) constant returns (bool) {
-        return now >= instances[instanceId].commitTimestamp + 5 minutes;
+        return now >= instances[instanceId].commitTimestamp + 1 minutes;
+    }
+
+    function getInstanceState(uint instanceId) constant returns (InstanceState) {
+        Instance instance = instances[instanceId]; // reference to instance
+        if (instance.state == InstanceState.Commited && commitExpired(instanceId)) {
+            return InstanceState.Unsolved;
+        }
+        return instance.state;
     }
 
     function commitSolution(uint instanceId, bytes32 commitmentHash) {
         if (instanceId >= instances.length) {
             throw;
         }
-        Instance instance = instances[instanceId]; // reference to instance
 
-        if (instance.state == InstanceState.Unsolved || (instance.state == InstanceState.Commited && commitExpired(instanceId))) {
+        if (getInstanceState(instanceId) == InstanceState.Unsolved) {
+            Instance instance = instances[instanceId]; // reference to instance
             instance.state = InstanceState.Commited;
             instance.commitmentHash = commitmentHash;
             instance.commitedSolver = msg.sender;
             instance.commitTimestamp = now;
+            instance.commitCount++;
         } else {
             throw;
         }
@@ -100,6 +116,7 @@ contract Main {
 
         // task solved! send reward
         instance.state = InstanceState.Solved;
+        instance.commitTimestamp = now;
         instance.solution = output;
 
         require(msg.sender.send(instance.reward), "Failed to send reward");
@@ -131,12 +148,26 @@ contract Main {
         return instances.length;
     }
 
-    function getInstance(uint instanceId) constant returns (uint, uint[], uint, InstanceState, bytes32, address, uint, uint[]) {
+    function getInstance(uint instanceId) constant returns (uint, uint[], uint, uint, InstanceState, uint, bytes32, address, uint, uint[]) {
         if (instanceId >= instances.length) {
             throw;
         }
 
         Instance instance = instances[instanceId];
-        return (instance.problemId, instance.input, instance.reward, instance.state, instance.commitmentHash, instance.commitedSolver, instance.commitTimestamp, instance.solution);
+        
+        InstanceState instanceState = getInstanceState(instanceId);
+
+        return (
+            instance.problemId, 
+            instance.input, 
+            instance.reward, 
+            instance.creationTimestamp, 
+            instanceState,
+            instance.commitCount,
+            instance.commitmentHash, 
+            instance.commitedSolver, 
+            instance.commitTimestamp, 
+            instance.solution
+        );
     }
 }
