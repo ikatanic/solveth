@@ -13,15 +13,15 @@ contract Main {
         string description;
     }
 
-    enum InstanceState {Unsolved, Commited, Solved}
+    enum TaskState {Unsolved, Commited, Solved}
 
-    struct Instance {
+    struct Task {
         uint problemId;
         uint[] input;
         uint reward;
         uint creationTimestamp;
 
-        InstanceState state;
+        TaskState state;
 
         uint commitCount;
         bytes32 commitmentHash;
@@ -32,7 +32,7 @@ contract Main {
     }
 
     Problem[] problems;
-    Instance[] instances;
+    Task[] tasks;
 
     uint[] emptyArray;
 
@@ -46,80 +46,80 @@ contract Main {
        return problemId;
     }
 
-    function newInstance(uint problemId, uint[] input) payable returns (uint) {
+    function newTask(uint problemId, uint[] input) payable returns (uint) {
         if (msg.value > 0 && problemId >= 0 && problemId < problems.length) {
-            uint instanceId = instances.length;
-            instances.push(Instance({
+            uint taskId = tasks.length;
+            tasks.push(Task({
                 problemId: problemId,
                 input: input,
                 reward: msg.value,
                 creationTimestamp: now,
-                state: InstanceState.Unsolved,
+                state: TaskState.Unsolved,
                 commitCount: 0,
                 commitmentHash: 0x0,
                 commitedSolver: 0x0,
                 commitTimestamp: 0,
                 solution: emptyArray
             }));
-            return instanceId;
+            return taskId;
         } else {
             throw;
         }
     }
 
-    function commitExpired(uint instanceId) constant returns (bool) {
-        return now >= instances[instanceId].commitTimestamp + 1 minutes;
+    function commitExpired(uint taskId) constant returns (bool) {
+        return now >= tasks[taskId].commitTimestamp + 1 minutes;
     }
 
-    function getInstanceState(uint instanceId) constant returns (InstanceState) {
-        Instance instance = instances[instanceId]; // reference to instance
-        if (instance.state == InstanceState.Commited && commitExpired(instanceId)) {
-            return InstanceState.Unsolved;
+    function getTaskState(uint taskId) constant returns (TaskState) {
+        Task task = tasks[taskId]; // reference to task
+        if (task.state == TaskState.Commited && commitExpired(taskId)) {
+            return TaskState.Unsolved;
         }
-        return instance.state;
+        return task.state;
     }
 
-    function commitSolution(uint instanceId, bytes32 commitmentHash) {
-        if (instanceId >= instances.length) {
+    function commitSolution(uint taskId, bytes32 commitmentHash) {
+        if (taskId >= tasks.length) {
             throw;
         }
 
-        if (getInstanceState(instanceId) == InstanceState.Unsolved) {
-            Instance instance = instances[instanceId]; // reference to instance
-            instance.state = InstanceState.Commited;
-            instance.commitmentHash = commitmentHash;
-            instance.commitedSolver = msg.sender;
-            instance.commitTimestamp = now;
-            instance.commitCount++;
+        if (getTaskState(taskId) == TaskState.Unsolved) {
+            Task task = tasks[taskId]; // reference to task
+            task.state = TaskState.Commited;
+            task.commitmentHash = commitmentHash;
+            task.commitedSolver = msg.sender;
+            task.commitTimestamp = now;
+            task.commitCount++;
         } else {
             throw;
         }
     }
 
 
-    function revealSolution(uint instanceId, uint[] output) {
-        require(instanceId < instances.length, "Unknown instanceId");
+    function revealSolution(uint taskId, uint[] output) {
+        require(taskId < tasks.length, "Unknown taskId");
         
-        Instance instance = instances[instanceId]; // reference to the instance
-        require(instance.state == InstanceState.Commited, "Instance is not in the commited state");
-        require(instance.commitedSolver == msg.sender, "Sender is not the commited solver");
+        Task task = tasks[taskId]; // reference to the task
+        require(task.state == TaskState.Commited, "Task is not in the commited state");
+        require(task.commitedSolver == msg.sender, "Sender is not the commited solver");
 
         // verify commitmentHash
         bytes32 commitmentHash = computeCommitmentHash(msg.sender, output);
 
-        require(commitmentHash == instance.commitmentHash, "Revealed solution is not the same as the commited one");
+        require(commitmentHash == task.commitmentHash, "Revealed solution is not the same as the commited one");
 
         require(
-            ProblemContract(problems[instance.problemId].contractAddress).check(instance.input, output), 
+            ProblemContract(problems[task.problemId].contractAddress).check(task.input, output), 
             "Solution is not passing problem's check function"
         );
 
         // task solved! send reward
-        instance.state = InstanceState.Solved;
-        instance.commitTimestamp = now;
-        instance.solution = output;
+        task.state = TaskState.Solved;
+        task.commitTimestamp = now;
+        task.solution = output;
 
-        require(msg.sender.send(instance.reward), "Failed to send reward");
+        require(msg.sender.send(task.reward), "Failed to send reward");
     }
 
     function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
@@ -144,30 +144,30 @@ contract Main {
         return (problem.contractAddress, problem.name, problem.description);
     }
 
-    function getNumberOfInstances() constant returns (uint) {
-        return instances.length;
+    function getNumberOfTasks() constant returns (uint) {
+        return tasks.length;
     }
 
-    function getInstance(uint instanceId) constant returns (uint, uint[], uint, uint, InstanceState, uint, bytes32, address, uint, uint[]) {
-        if (instanceId >= instances.length) {
+    function getTask(uint taskId) constant returns (uint, uint[], uint, uint, TaskState, uint, bytes32, address, uint, uint[]) {
+        if (taskId >= tasks.length) {
             throw;
         }
 
-        Instance instance = instances[instanceId];
+        Task task = tasks[taskId];
         
-        InstanceState instanceState = getInstanceState(instanceId);
+        TaskState taskState = getTaskState(taskId);
 
         return (
-            instance.problemId, 
-            instance.input, 
-            instance.reward, 
-            instance.creationTimestamp, 
-            instanceState,
-            instance.commitCount,
-            instance.commitmentHash, 
-            instance.commitedSolver, 
-            instance.commitTimestamp, 
-            instance.solution
+            task.problemId, 
+            task.input, 
+            task.reward, 
+            task.creationTimestamp, 
+            taskState,
+            task.commitCount,
+            task.commitmentHash, 
+            task.commitedSolver, 
+            task.commitTimestamp, 
+            task.solution
         );
     }
 }

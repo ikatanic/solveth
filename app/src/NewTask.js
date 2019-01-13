@@ -2,7 +2,7 @@ import React from "react";
 
 import web3 from "web3";
 
-class NewInstanceForm extends React.Component {
+class NewTaskForm extends React.Component {
   constructor(props) {
     super(props);
     this.state = { inputString: "", reward: "" };
@@ -60,22 +60,22 @@ class NewInstanceForm extends React.Component {
   }
 }
 
-class NewInstance extends React.Component {
-  handleNewInstance = (inputString, rewardEth) => {
-    const { problemId, onNewInstance } = this.props;
+class NewTask extends React.Component {
+  handleNewTask = (inputString, rewardEth) => {
+    const { problemId, onNewTask } = this.props;
     const input = inputString.split(" ").map(Number);
     const reward = web3.utils.toWei(rewardEth, "ether");
 
-    this.setState({ submitStatus: onNewInstance(problemId, input, reward) });
+    this.setState({ submitStatus: onNewTask(problemId, input, reward) });
   };
 
   render() {
     return (
       <div>
-        <NewInstanceForm onSubmit={this.handleNewInstance} />
+        <NewTaskForm onSubmit={this.handleNewTask} />
       </div>
     );
   }
 }
 
-export default NewInstance;
+export default NewTask;

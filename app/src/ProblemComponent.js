@@ -1,6 +1,6 @@
 import React from "react";
-import InstanceComponent from "./InstanceComponent";
-import NewInstance from "./NewInstance";
+import TaskComponent from "./TaskComponent";
+import NewTask from "./NewTask";
 
 import Collapsible from "react-collapsible";
 import Badge from "react-bootstrap/lib/Badge";
@@ -16,41 +16,41 @@ class ProblemComponent extends React.Component {
       problem,
       commitSolution,
       revealSolution,
-      onNewInstance,
+      onNewTask,
       myAddress
     } = this.props;
 
-    let instancesComponents = [];
+    let tasksComponents = [];
     let totalReward = 0;
 
-    // Sort instances.
+    // Sort tasks.
     // First show unsolved, then solved.
     // Tie by reward.
 
     const indexes = [];
-    for (var i = 0; i < problem.instances.length; ++i) {
+    for (var i = 0; i < problem.tasks.length; ++i) {
       indexes.push(i);
     }
 
     indexes.sort((i, j) => {
-      const iSolved = problem.instances[i].state == 2;
-      const jSolved = problem.instances[j].state == 2;
+      const iSolved = problem.tasks[i].state == 2;
+      const jSolved = problem.tasks[j].state == 2;
       if (iSolved != jSolved) return iSolved > jSolved;
 
-      return problem.instances[i].reward > problem.instances[j].reward;
+      return problem.tasks[i].reward > problem.tasks[j].reward;
     });
 
-    for (var j = 0; j < problem.instances.length; ++j) {
+    for (var j = 0; j < problem.tasks.length; ++j) {
       const i = indexes[j];
 
-      if (!this.props.showSolved && problem.instances[i].state == 2) {
+      if (!this.props.showSolved && problem.tasks[i].state == 2) {
         continue;
       }
 
-      instancesComponents.push(
+      tasksComponents.push(
         <ListGroupItem key={i}>
-          <InstanceComponent
-            instance={problem.instances[i]}
+          <TaskComponent
+            task={problem.tasks[i]}
             commitSolution={commitSolution}
             revealSolution={revealSolution}
             myAddress={myAddress}
@@ -58,7 +58,7 @@ class ProblemComponent extends React.Component {
         </ListGroupItem>
       );
 
-      totalReward += Number(problem.instances[i].reward);
+      totalReward += Number(problem.tasks[i].reward);
     }
 
     let problemTitleClosed = (
@@ -68,8 +68,8 @@ class ProblemComponent extends React.Component {
         </div>
         <div className="col">
           <Badge className="badge-primary">
-            {instancesComponents.length}
-            {" instances"}
+            {tasksComponents.length}
+            {" tasks"}
           </Badge>{" "}
           <Badge className="badge-primary">
             {totalReward / 1e9}
@@ -90,8 +90,8 @@ class ProblemComponent extends React.Component {
         </div>
         <div className="col">
           <Badge className="badge-primary">
-            {instancesComponents.length}
-            {" instances"}
+            {tasksComponents.length}
+            {" tasks"}
           </Badge>{" "}
           <Badge className="badge-primary">
             {totalReward / 1e9}
@@ -105,15 +105,15 @@ class ProblemComponent extends React.Component {
       </div>
     );
 
-    const newInstanceButton = (
+    const newTaskButton = (
       <h4>
-        <span className="fas fa-plus" aria-hidden="true" /> New instance
+        <span className="fas fa-plus" aria-hidden="true" /> New task
       </h4>
     );
-    const newInstanceComponent = (
+    const newTaskComponent = (
       <ListGroupItem>
-        <Collapsible trigger={newInstanceButton} open={false}>
-          <NewInstance problemId={problem.id} onNewInstance={onNewInstance} />
+        <Collapsible trigger={newTaskButton} open={false}>
+          <NewTask problemId={problem.id} onNewTask={onNewTask} />
         </Collapsible>
       </ListGroupItem>
     );
@@ -134,8 +134,8 @@ class ProblemComponent extends React.Component {
           </div>
 
           <ListGroup>
-            {instancesComponents}
-            {newInstanceComponent}
+            {tasksComponents}
+            {newTaskComponent}
           </ListGroup>
         </Collapsible>
       </div>

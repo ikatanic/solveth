@@ -1,14 +1,14 @@
 class Problem {
-  constructor(id, contractAddress, name, description, instances) {
+  constructor(id, contractAddress, name, description, tasks) {
     this.id = id;
     this.contractAddress = contractAddress;
     this.name = name;
     this.description = description;
-    this.instances = instances;
+    this.tasks = tasks;
   }
 }
 
-class Instance {
+class Task {
   constructor(
     id,
     problemId,
@@ -36,4 +36,4 @@ class Instance {
   }
 }
 
-export { Problem, Instance };
+export { Problem, Task };

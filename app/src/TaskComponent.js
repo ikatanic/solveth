@@ -54,40 +54,40 @@ function TxStatus(props) {
   }
 }
 
-class InstanceComponent extends React.Component {
+class TaskComponent extends React.Component {
   state = { submitStatus: null };
 
   componentDidMount() {}
 
   commitSolution = solutionString => {
-    const { instance, commitSolution } = this.props;
+    const { task, commitSolution } = this.props;
     const solution = solutionString.split(" ").map(Number);
-    this.setState({ submitStatus: commitSolution(instance.id, solution) });
+    this.setState({ submitStatus: commitSolution(task.id, solution) });
   };
 
   revealSolution = solutionString => {
-    const { instance, revealSolution } = this.props;
+    const { task, revealSolution } = this.props;
     const solution = solutionString.split(" ").map(Number);
-    this.setState({ submitStatus: revealSolution(instance.id, solution) });
+    this.setState({ submitStatus: revealSolution(task.id, solution) });
   };
 
   render() {
-    const { instance, myAddress } = this.props;
+    const { task, myAddress } = this.props;
 
-    const instanceHeader = (
+    const taskHeader = (
       <div>
         <div className="row">
           <div className="col">
             <Badge className="badge-primary">
-              {instance.reward / 1e9}
+              {task.reward / 1e9}
               {" ETH"}
             </Badge>
             {"  "}
             <Badge className="badge-primary">
-              {instance.commitCount}
+              {task.commitCount}
               {" attempts"}
             </Badge>{" "}
-            {instance.state == 2 && (
+            {task.state == 2 && (
               <span
                 className="fas fa-check"
                 data-toggle="tooltip"
@@ -104,7 +104,7 @@ class InstanceComponent extends React.Component {
         <div>
           Input:
           <FormGroup controlId="formControlsTextarea">
-            <FormControl value={instance.input} readOnly={true} />
+            <FormControl value={task.input} readOnly={true} />
           </FormGroup>
         </div>
       </div>
@@ -112,34 +112,32 @@ class InstanceComponent extends React.Component {
 
     const solutionForm = (
       <SolutionForm
-        onSubmit={
-          instance.state == 0 ? this.commitSolution : this.revealSolution
-        }
-        buttonLabel={instance.state == 0 ? "Commit" : "Reveal"}
+        onSubmit={task.state == 0 ? this.commitSolution : this.revealSolution}
+        buttonLabel={task.state == 0 ? "Commit" : "Reveal"}
       />
     );
 
-    let instanceBody;
+    let taskBody;
 
-    if (instance.state == 0) {
+    if (task.state == 0) {
       // Unsolved
-      instanceBody = (
+      taskBody = (
         <div>
           {" "}
           <SolutionForm onSubmit={this.commitSolution} buttonLabel={"Commit"} />
         </div>
       );
-    } else if (instance.state == 1) {
+    } else if (task.state == 1) {
       // Commited
-      const commitDate = new Date(instance.commitTimestamp * 1000);
+      const commitDate = new Date(task.commitTimestamp * 1000);
 
-      if (instance.commitedSolver == myAddress) {
+      if (task.commitedSolver == myAddress) {
         // reveal
-        instanceBody = (
+        taskBody = (
           <div>
             Commited by{" "}
             <EtherScanAddressLink
-              address={instance.commitedSolver}
+              address={task.commitedSolver}
               myAddress={myAddress}
             />{" "}
             at {commitDate.toLocaleDateString()}{" "}
@@ -154,11 +152,11 @@ class InstanceComponent extends React.Component {
           </div>
         );
       } else {
-        instanceBody = (
+        taskBody = (
           <div>
             Commited by{" "}
             <EtherScanAddressLink
-              address={instance.commitedSolver}
+              address={task.commitedSolver}
               myAddress={myAddress}
             />{" "}
             at {commitDate.toLocaleDateString()}{" "}
@@ -166,16 +164,16 @@ class InstanceComponent extends React.Component {
           </div>
         );
       }
-    } else if (instance.state == 2) {
+    } else if (task.state == 2) {
       // Solved
-      const commitDate = new Date(instance.commitTimestamp * 1000);
+      const commitDate = new Date(task.commitTimestamp * 1000);
 
-      instanceBody = (
+      taskBody = (
         <div>
           <div>
             Solved by{" "}
             <EtherScanAddressLink
-              address={instance.commitedSolver}
+              address={task.commitedSolver}
               myAddress={myAddress}
             />{" "}
             at {commitDate.toLocaleDateString()}{" "}
@@ -184,7 +182,7 @@ class InstanceComponent extends React.Component {
           <div>
             Solution:
             <FormGroup controlId="formControlsTextarea">
-              <FormControl value={instance.solution} readOnly={true} />
+              <FormControl value={task.solution} readOnly={true} />
             </FormGroup>
           </div>
         </div>
@@ -193,11 +191,11 @@ class InstanceComponent extends React.Component {
 
     return (
       <div>
-        {instanceHeader}
-        {instanceBody}
+        {taskHeader}
+        {taskBody}
       </div>
     );
   }
 }
 
-export default InstanceComponent;
+export default TaskComponent;

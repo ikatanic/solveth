@@ -1,6 +1,6 @@
 import React from "react";
 import ProblemComponent from "./ProblemComponent";
-import { Problem, Instance } from "./types";
+import { Problem, Task } from "./types";
 import web3 from "web3";
 import ListGroup from "react-bootstrap/lib/ListGroup";
 import ListGroupItem from "react-bootstrap/lib/ListGroupItem";
@@ -13,40 +13,40 @@ import ToggleButtonGroup from "react-bootstrap/lib/ToggleButtonGroup";
 class Platform extends React.Component {
   state = {
     problemKeys: [],
-    instanceKeys: [],
+    taskKeys: [],
     problemsCountKey: null,
-    instancesCountKey: null,
+    tasksCountKey: null,
     showSolved: false
   };
 
-  instances() {
+  tasks() {
     const { Main } = this.props.drizzleState.contracts;
-    const { instanceKeys } = this.state;
+    const { taskKeys } = this.state;
 
-    const instances = [];
-    for (var i = 0; i < instanceKeys.length; ++i) {
-      if (instanceKeys[i]) {
-        const instanceData = Main.getInstance[instanceKeys[i]];
-        if (instanceData) {
-          const instance = new Instance(
+    const tasks = [];
+    for (var i = 0; i < taskKeys.length; ++i) {
+      if (taskKeys[i]) {
+        const taskData = Main.getTask[taskKeys[i]];
+        if (taskData) {
+          const task = new Task(
             i,
-            instanceData.value[0],
-            instanceData.value[1],
-            instanceData.value[2],
-            instanceData.value[3],
-            instanceData.value[4],
-            instanceData.value[5],
-            instanceData.value[6],
-            instanceData.value[7],
-            instanceData.value[8],
-            instanceData.value[9],
-            instanceData.value[10]
+            taskData.value[0],
+            taskData.value[1],
+            taskData.value[2],
+            taskData.value[3],
+            taskData.value[4],
+            taskData.value[5],
+            taskData.value[6],
+            taskData.value[7],
+            taskData.value[8],
+            taskData.value[9],
+            taskData.value[10]
           );
-          instances.push(instance);
+          tasks.push(task);
         }
       }
     }
-    return instances;
+    return tasks;
   }
 
   getData() {
@@ -70,15 +70,15 @@ class Platform extends React.Component {
       }
     }
 
-    const instances = this.instances();
-    for (var j = 0; j < instances.length; ++j) {
-      const instance = instances[j];
-      problems[instance.problemId].instances.push(instance);
+    const tasks = this.tasks();
+    for (var j = 0; j < tasks.length; ++j) {
+      const task = tasks[j];
+      problems[task.problemId].tasks.push(task);
     }
 
     return {
       problems: problems,
-      instances: instances
+      tasks: tasks
     };
   }
 
@@ -87,7 +87,7 @@ class Platform extends React.Component {
     const contract = drizzle.contracts.Main;
 
     const problemsCountKey = contract.methods.getNumberOfProblems.cacheCall();
-    const instancesCountKey = contract.methods.getNumberOfInstances.cacheCall();
+    const tasksCountKey = contract.methods.getNumberOfTasks.cacheCall();
 
     this.unsubscribe = drizzle.store.subscribe(() => {
       const drizzleState = drizzle.store.getState();
@@ -115,31 +115,30 @@ class Platform extends React.Component {
           }
         }
 
-        const instancesCountData =
-          Main.getNumberOfInstances[this.state.instancesCountKey];
+        const tasksCountData = Main.getNumberOfTasks[this.state.tasksCountKey];
 
-        if (instancesCountData) {
-          const instancesCount = instancesCountData.value;
-          const instanceKeys = this.state.instanceKeys;
+        if (tasksCountData) {
+          const tasksCount = tasksCountData.value;
+          const taskKeys = this.state.taskKeys;
 
-          const currInstancesCount = instanceKeys.length;
+          const currTasksCount = taskKeys.length;
 
-          if (currInstancesCount < instancesCount) {
-            for (var i = currInstancesCount; i < instancesCount; ++i) {
-              instanceKeys.push(null);
+          if (currTasksCount < tasksCount) {
+            for (var i = currTasksCount; i < tasksCount; ++i) {
+              taskKeys.push(null);
             }
-            this.setState({ instanceKeys });
+            this.setState({ taskKeys });
 
-            for (var i = currInstancesCount; i < instancesCount; ++i) {
-              instanceKeys[i] = contract.methods.getInstance.cacheCall(i);
+            for (var i = currTasksCount; i < tasksCount; ++i) {
+              taskKeys[i] = contract.methods.getTask.cacheCall(i);
             }
-            this.setState({ instanceKeys });
+            this.setState({ taskKeys });
           }
         }
       }
     });
 
-    this.setState({ problemsCountKey, instancesCountKey });
+    this.setState({ problemsCountKey, tasksCountKey });
   }
 
   // generates random 256 bits and returns as hex string.
@@ -192,7 +191,7 @@ class Platform extends React.Component {
     return this.props.drizzleState.accounts[0];
   };
 
-  commitSolution = (instanceId, solution) => {
+  commitSolution = (taskId, solution) => {
     const { drizzle, drizzleState } = this.props;
     const { Main } = drizzle.contracts;
 
@@ -200,7 +199,7 @@ class Platform extends React.Component {
     const commitmentHash = this.computeCommitmentHash(address, solution);
 
     const stackId = Main.methods["commitSolution"].cacheSend(
-      instanceId,
+      taskId,
       commitmentHash,
       {
         from: address,
@@ -213,13 +212,13 @@ class Platform extends React.Component {
     };
   };
 
-  newInstance = (problemId, input, reward) => {
+  newTask = (problemId, input, reward) => {
     const { drizzle } = this.props;
     const { Main } = drizzle.contracts;
 
     const address = this.myAddress();
     console.log("here");
-    const stackId = Main.methods["newInstance"].cacheSend(problemId, input, {
+    const stackId = Main.methods["newTask"].cacheSend(problemId, input, {
       from: address,
       gas: 200000,
       value: reward
@@ -246,20 +245,16 @@ class Platform extends React.Component {
     };
   };
 
-  revealSolution = (instanceId, solution) => {
+  revealSolution = (taskId, solution) => {
     const { drizzle, drizzleState } = this.props;
     const { Main } = drizzle.contracts;
 
     const address = drizzleState.accounts[0];
 
-    const stackId = Main.methods["revealSolution"].cacheSend(
-      instanceId,
-      solution,
-      {
-        from: address,
-        gas: 2000000
-      }
-    );
+    const stackId = Main.methods["revealSolution"].cacheSend(taskId, solution, {
+      from: address,
+      gas: 2000000
+    });
 
     return () => {
       return this.getTxStatus(stackId);
@@ -278,7 +273,7 @@ class Platform extends React.Component {
   render() {
     if (!this.props.drizzleState) return "";
 
-    const { problems, instances } = this.getData();
+    const { problems, tasks } = this.getData();
 
     const problemsComponents = [];
     for (var i = 0; i < problems.length; ++i) {
@@ -289,7 +284,7 @@ class Platform extends React.Component {
             myAddress={this.myAddress()}
             commitSolution={this.commitSolution}
             revealSolution={this.revealSolution}
-            onNewInstance={this.newInstance}
+            onNewTask={this.newTask}
             showSolved={this.state.showSolved}
           />
         </ListGroupItem>
