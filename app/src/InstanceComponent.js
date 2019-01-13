@@ -4,6 +4,7 @@ import FormGroup from "react-bootstrap/lib/FormGroup";
 import FormControl from "react-bootstrap/lib/FormControl";
 import EtherScanAddressLink from "./etherscan";
 import { stringify } from "querystring";
+import Badge from "react-bootstrap/lib/Badge";
 
 class SolutionForm extends React.Component {
   constructor(props) {
@@ -75,9 +76,31 @@ class InstanceComponent extends React.Component {
 
     const instanceHeader = (
       <div>
-        <div>id: {instance.id}</div>
-        <div>reward: {instance.reward / 1e9} ETH</div>
-        <div>attempts: {instance.commitCount}</div>
+        <div className="row">
+          <div className="col">
+            <Badge className="badge-primary">
+              {instance.reward / 1e9}
+              {" ETH"}
+            </Badge>
+            {"  "}
+            <Badge className="badge-primary">
+              {instance.commitCount}
+              {" attempts"}
+            </Badge>{" "}
+            {instance.state == 2 && (
+              <span
+                className="fas fa-check"
+                data-toggle="tooltip"
+                data-placement="top"
+                title="Solved"
+              />
+            )}
+          </div>
+          <div className="col-">
+            <span className="fas fa-angle-up" />
+          </div>
+        </div>
+
         <div>
           Input:
           <FormGroup controlId="formControlsTextarea">

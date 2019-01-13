@@ -130,17 +130,13 @@ class ProblemComponent extends React.Component {
               {" "}
               <EtherScanAddressLink address={problem.contractAddress} />
             </div>
-            <p>{problem.description} </p>
+            {problem.description}
           </div>
 
-          <main className="container">
-            <div className="pure-g">
-              <ListGroup>
-                {instancesComponents}
-                {newInstanceComponent}
-              </ListGroup>
-            </div>
-          </main>
+          <ListGroup>
+            {instancesComponents}
+            {newInstanceComponent}
+          </ListGroup>
         </Collapsible>
       </div>
     );
