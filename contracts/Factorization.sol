@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.24;
 
 contract Factorization {
     string constant name = "Factorization";
@@ -12,7 +12,7 @@ contract Factorization {
         return description;
     }
 
-    function check(uint[] input, uint[] output) returns (bool) {
+    function check(uint[] input, uint[] output) public pure returns (bool) {
         if (input.length != 1 || output.length != 1) {
             return false;
         }

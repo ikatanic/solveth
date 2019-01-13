@@ -1,9 +1,9 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.24;
 
 contract ProblemContract {
     function getDescription() public view returns(string);
     function getName() public view returns(string);
-    function check(uint[] input, uint[] output) returns (bool);
+    function check(uint[] input, uint[] output) public pure returns (bool);
 }
 
 contract Main {
@@ -36,77 +36,68 @@ contract Main {
 
     uint[] emptyArray;
 
-    function newProblem(address contractAddress) returns (uint) {
-       uint problemId = problems.length;
-       problems.push(Problem({
-           contractAddress: contractAddress,
-           name: ProblemContract(contractAddress).getName(),
-           description: ProblemContract(contractAddress).getDescription()
-       }));
-       return problemId;
+    function newProblem(address contractAddress) public returns (uint) {
+        uint problemId = problems.length;
+        problems.push(Problem({
+            contractAddress: contractAddress,
+            name: ProblemContract(contractAddress).getName(),
+            description: ProblemContract(contractAddress).getDescription()
+        }));
+        return problemId;
     }
 
-    function newTask(uint problemId, uint[] input) payable returns (uint) {
-        if (msg.value > 0 && problemId >= 0 && problemId < problems.length) {
-            uint taskId = tasks.length;
-            tasks.push(Task({
-                problemId: problemId,
-                input: input,
-                reward: msg.value,
-                creationTimestamp: now,
-                state: TaskState.Unsolved,
-                commitCount: 0,
-                commitmentHash: 0x0,
-                commitedSolver: 0x0,
-                commitTimestamp: 0,
-                solution: emptyArray
-            }));
-            return taskId;
-        } else {
-            throw;
-        }
+    function newTask(uint problemId, uint[] input) public payable returns (uint) {
+        require(msg.value > 0, "Reward must be greater than 0");
+        require(problemId >= 0 && problemId < problems.length, "problemId must be valid problem id");
+
+        uint taskId = tasks.length;
+        tasks.push(Task({
+            problemId: problemId,
+            input: input,
+            reward: msg.value,
+            creationTimestamp: now,
+            state: TaskState.Unsolved,
+            commitCount: 0,
+            commitmentHash: 0x0,
+            commitedSolver: 0x0,
+            commitTimestamp: 0,
+            solution: emptyArray
+        }));
+        return taskId;
     }
 
-    function commitExpired(uint taskId) constant returns (bool) {
+    function commitExpired(uint taskId) private view returns (bool) {
         return now >= tasks[taskId].commitTimestamp + 1 minutes;
     }
 
-    function getTaskState(uint taskId) constant returns (TaskState) {
-        Task task = tasks[taskId]; // reference to task
+    function getTaskState(uint taskId) private view returns (TaskState) {
+        Task storage task = tasks[taskId]; // reference to task
         if (task.state == TaskState.Commited && commitExpired(taskId)) {
             return TaskState.Unsolved;
         }
         return task.state;
     }
 
-    function commitSolution(uint taskId, bytes32 commitmentHash) {
-        if (taskId >= tasks.length) {
-            throw;
-        }
+    function commitSolution(uint taskId, bytes32 commitmentHash) public {
+        require(taskId >= 0 && taskId < tasks.length, "taskId must be a valid task id");
+        require(getTaskState(taskId) == TaskState.Unsolved, "Task must be in the Unsolved state");
 
-        if (getTaskState(taskId) == TaskState.Unsolved) {
-            Task task = tasks[taskId]; // reference to task
-            task.state = TaskState.Commited;
-            task.commitmentHash = commitmentHash;
-            task.commitedSolver = msg.sender;
-            task.commitTimestamp = now;
-            task.commitCount++;
-        } else {
-            throw;
-        }
+        Task storage task = tasks[taskId]; // reference to the task
+        task.state = TaskState.Commited;
+        task.commitmentHash = commitmentHash;
+        task.commitedSolver = msg.sender;
+        task.commitTimestamp = now;
+        task.commitCount++;
     }
 
-
-    function revealSolution(uint taskId, uint[] output) {
-        require(taskId < tasks.length, "Unknown taskId");
+    function revealSolution(uint taskId, uint[] output) public {
+        require(taskId >= 0 && taskId < tasks.length, "taskId must be a valid task id");
         
-        Task task = tasks[taskId]; // reference to the task
-        require(task.state == TaskState.Commited, "Task is not in the commited state");
-        require(task.commitedSolver == msg.sender, "Sender is not the commited solver");
+        Task storage task = tasks[taskId]; // reference to the task
+        require(task.state == TaskState.Commited, "Task must be in the Commited state");
+        require(task.commitedSolver == msg.sender, "Sender must be the commited solver");
 
-        // verify commitmentHash
         bytes32 commitmentHash = computeCommitmentHash(msg.sender, output);
-
         require(commitmentHash == task.commitmentHash, "Revealed solution is not the same as the commited one");
 
         require(
@@ -122,39 +113,35 @@ contract Main {
         require(msg.sender.send(task.reward), "Failed to send reward");
     }
 
-    function computeCommitmentHash(address solver, uint[] output) returns (bytes32) {
-        bytes32 result = keccak256(solver);
+    function computeCommitmentHash(address solver, uint[] output) private pure returns (bytes32) {
+        bytes32 result = keccak256(abi.encodePacked(solver));
         for (uint i = 0; i < output.length; ++i) {
-            result = result ^ keccak256(output[i]);
+            result = result ^ keccak256(abi.encodePacked(output[i]));
         }
-        return keccak256(result);
+        return keccak256(abi.encodePacked(result));
     }
 
     // getters
-    function getNumberOfProblems() constant returns (uint) {
+    function getNumberOfProblems() public view returns (uint) {
         return problems.length;
     }
 
-    function getProblem(uint problemId) constant returns (address, string, string) {
-        if (problemId >= problems.length) {
-            throw;
-        }
+    function getProblem(uint problemId) public view returns (address, string, string) {
+        require(problemId >= 0 && problemId < problems.length, "problemId must be valid problem id");
 
-        Problem problem = problems[problemId];
+        Problem storage problem = problems[problemId];
         return (problem.contractAddress, problem.name, problem.description);
     }
 
-    function getNumberOfTasks() constant returns (uint) {
+    function getNumberOfTasks() public view returns (uint) {
         return tasks.length;
     }
 
-    function getTask(uint taskId) constant returns (uint, uint[], uint, uint, TaskState, uint, bytes32, address, uint, uint[]) {
-        if (taskId >= tasks.length) {
-            throw;
-        }
+    function getTask(uint taskId) public view returns (uint, uint[], uint, uint, TaskState, uint, bytes32, address, uint, uint[]) {
+        require(taskId >= 0 && taskId < tasks.length, "taskId must be a valid task id");
 
-        Task task = tasks[taskId];
-        
+        Task storage task = tasks[taskId];
+
         TaskState taskState = getTaskState(taskId);
 
         return (

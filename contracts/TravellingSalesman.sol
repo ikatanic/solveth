@@ -1,4 +1,4 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.24;
 
 contract TravellingSalesman {
     string constant name = "Travelling Salesman";
@@ -12,7 +12,7 @@ contract TravellingSalesman {
         return description;
     }
 
-    function check(uint[] input, uint[] output) returns (bool) {
+    function check(uint[] input, uint[] output) public pure returns (bool) {
         // Input format is: N M L a_1 b_1 c_1 ... a_M b_M c_M
         // where N is number of nodes (indexed 1..N), M is number of edges, L is upper bound on route length.
         // i-th edge has length c_i and goes from a_i to b_i.

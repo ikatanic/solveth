@@ -15,7 +15,7 @@ We represent a problem by an Ethereum smart contract with the following interfac
 contract ProblemContract {
     function getDescription() public view returns(string);
     function getName() public view returns(string);
-    function check(uint[] input, uint[] output) returns (bool);
+    function check(uint[] input, uint[] output) public pure returns (bool);
 }
 ```
 
@@ -28,9 +28,14 @@ impossible to use, but it might be awkward to convert arbritrary input types to 
 **Task** is an input to a problem, along with some reward in ether. The platform ensures that
 whoever comes first and submits the solution to the task (which passes the validation by the solution checker) gets the reward.
 
+For instance, Alice could submit a factorization task with input number being 30. Bob could then
+submit 2 as a solution and win the prize.
+
+To prevent cheating, solution submitting is implemented as two-phase process: commit phase and reveal phase.
+
 ## Developing
 
-Backend of this app is composed of several smart contracts (see `contracts/`) that need to be deployed on the Ethereum blockchain.
+Backend of this dapp is composed of several smart contracts (see `contracts/`) that need to be deployed on the Ethereum blockchain.
 Frontend is a React+Bootstrap app, see `app/` for details.
 
 Install ethereum test blockchain:
